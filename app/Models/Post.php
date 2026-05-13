@@ -5,6 +5,8 @@ namespace App\Models;
 use Cviebrock\EloquentSluggable\Sluggable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Override;
 class Post extends Model
 {
@@ -13,7 +15,7 @@ class Post extends Model
     protected $fillable = ['title', 'description', 'content', 'thumbnail', 'category_id'];
 
     public function tags() {
-        return $this->belongsToMany(Tag::class);
+        return $this->belongsToMany(Tag::class)->withTimestamps();
     }
 
     public function category() {
@@ -29,5 +31,22 @@ class Post extends Model
                 'onUpdate' => true,
             ]
         ];
+    }
+
+    public static function uploadImage(Request $request, $image = null) {
+        if($request->hasFile('thumbnail')) {
+            if($image) {
+                Storage::delete($image);
+            }
+            $folder = date('Y-m-d');
+            return $request->file('thumbnail')->store("images/{$folder}", 'public');
+        }
+        return null;
+    }
+    public function getImage() {
+        if(!$this->thumbnail) {
+            return asset("no-image.png");
+        }
+        return asset("uploads/{$this->thumbnail}");
     }
 } 

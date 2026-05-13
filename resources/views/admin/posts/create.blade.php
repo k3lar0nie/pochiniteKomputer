@@ -26,7 +26,7 @@
                     <div class="card-header">
                         <h3 class="card-title">черкание малявы</h3>
                     </div>
-                    <form action="{{ route('posts.store') }}" method="POST">
+                    <form action="{{ route('posts.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         <div class="card-body">
 
@@ -43,7 +43,7 @@
 
 
                             <div class="form-group">
-                                <label for="description">кантент</label>
+                                <label for="content">кантент</label>
                                 <textarea name="content" id="" class="form-control" id="content" rows="7" placeholder="кантеент..."></textarea>
                             </div>
 

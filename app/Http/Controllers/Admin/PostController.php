@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Post;
 use App\Models\Tag;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class PostController extends Controller
 {
@@ -36,11 +37,30 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate(['title' => 'required']);
+        $request->validate(['title' => 'required',
+        'description' => 'required',
+        'content' => 'required',
+        'category_id' => 'required|integer',
+        'thumbnail' => 'nullable',
+        ]);
+
+
+
+
+        $data = $request->all();
+
+        dump($data);
+
+        // if($request->hasFile('thumbnail')) {
+        //     $folder = date('Y-m-d');
+        //     $data['thumbnail'] = $request->file('thumbnail')->store("images/{$folder}");
+        // }
+        $data['thumbnail'] = Post::uploadImage($request);
 
         // dd($request->all());
 
-        Post::query()->create($request->all());
+        $post = Post::create($data);
+        $post->tags()->sync($request->tags);
 
         return redirect()->route('posts.index')->with('success', 'малява отправлена на сервак');
     }
@@ -58,7 +78,11 @@ class PostController extends Controller
      */
     public function edit(string $id)
     {
-        return view('admin.posts.edit');
+        $categories = Category::pluck('title', 'id')->all();
+
+        $tags = Tag::pluck('title', 'id')->all();
+        $post = Post::find($id);
+        return view('admin.posts.edit', compact('post', 'categories', 'tags'));
     }
 
     /**
@@ -66,7 +90,20 @@ class PostController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $request->validate(['title'=>'required']);
+        $request->validate(['title' => 'required',
+        'description' => 'required',
+        'content' => 'required',
+        'category_id' => 'required|integer',
+        'thumbnail' => 'nullable',
+        ]);
+
+
+        $post = Post::find($id);
+        $data = $request->all();
+        $data['thumbnail'] = Post::uploadImage($request, $post->thumbnail);
+
+        $post->update($data);
+        $post->tags()->sync($request->tags);
 
         return redirect()->route('posts.index')->with('success', 'успешно но нехуй менять че неграмотный');
     }
@@ -76,6 +113,11 @@ class PostController extends Controller
      */
     public function destroy(string $id)
     {
-        return redirect()->route('posts.index')->with('success','чето закрысил да а ну верни черт ебучий');
+        $post = Post::find($id);
+        $post->tags()->sync([]);
+        Storage::delete($post->thumbnail);
+        $post->delete();
+
+        return redirect()->route('posts.index')->with('success','чето удалил да а ну верни черт бля');
     }
 }
