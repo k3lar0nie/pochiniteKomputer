@@ -1,1 +1,6 @@
 @extends('admin.layouts.layout')
+
+@section('content')
+<h1>админ</h1>
+
+@endsection
